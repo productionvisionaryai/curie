@@ -3,7 +3,27 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Cpu, User, Activity, Scale } from 'lucide-react';
 
-export default function ChatInterface({ telemetry, isEmergency }) {
+// Interfaz de tipos (agrega esto arriba de la función)
+interface ChatInterfaceProps {
+  telemetry: {
+    bpm: number;
+    weight: number;
+    hrv?: number;
+    spo2?: number;
+    muscleMass?: number;
+    bodyWater?: number;
+    visceralFat?: number;
+    bmr?: number;
+    target?: number;
+    phaseAngle?: number;
+    pbf?: number;
+  };
+  isEmergency?: boolean;
+}
+
+// Ahora la función sí sabe qué tipos esperar:
+export default function ChatInterface({ telemetry, isEmergency }: ChatInterfaceProps) {
+  
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -13,7 +33,7 @@ export default function ChatInterface({ telemetry, isEmergency }) {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const scrollRef = useRef(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
