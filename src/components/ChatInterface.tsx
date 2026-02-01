@@ -45,7 +45,7 @@ export default function ChatInterface({
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hola Abraham, soy Curie. He analizado tu perfil actual de 71 kg. ¿Deseas revisar los ajustes de tu dieta para alcanzar los 75 kg o tienes alguna duda sobre tu suplementación?',
+      content: `Hola Abraham, soy Curie. He analizado tu perfil actual de ${telemetry.weight} kg. ¿Deseas revisar los ajustes de tu dieta para alcanzar los 75 kg o tienes alguna duda sobre tu suplementación?`,
       timestamp: new Date()
     }
   ]);
@@ -58,8 +58,9 @@ export default function ChatInterface({
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
+  // --- FUNCIÓN DE ENVÍO CORREGIDA ---
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isTyping) return;
 
     const userMsg: Message = { 
       role: 'user', 
@@ -71,16 +72,43 @@ export default function ChatInterface({
     setInput('');
     setIsTyping(true);
 
-    // Simulación de respuesta de Helena (Integración con Groq pendiente)
-    setTimeout(() => {
-      setIsTyping(false);
-      const helenaMsg: Message = {
+    try {
+      // Llamada real a tu API en Vercel
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: [...messages, userMsg].map(m => ({ 
+            role: m.role, 
+            content: m.content 
+          })),
+          telemetry,
+          isEmergency
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error de conexión con el Nexus');
+
+      // Procesar la respuesta (aquí asumimos formato JSON, si usas streaming el código cambia ligeramente)
+      const data = await response.json();
+      
+      const curieMsg: Message = {
         role: 'assistant',
-        content: 'Entendido. Estoy procesando los ajustes fisiológicos. Recuerda que para subir a 75 kg con bajos carbohidratos, priorizaremos la densidad calórica del aceite de oliva y coco.',
+        content: data.content || "Error en el procesamiento de datos.",
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, helenaMsg]);
-    }, 1500);
+      
+      setMessages(prev => [...prev, curieMsg]);
+    } catch (error) {
+      console.error("Error en el envío:", error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "⚠️ Error de comunicación: No pude conectar con el núcleo de Curie. Verifica tu conexión.",
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (
