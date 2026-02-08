@@ -358,7 +358,7 @@ export default function PatientDashboard() {
               <Badge text="RAG Medical" color="cyan" />
               <Badge text="Real-time Telemetry" color="emerald" />
               <Badge text="Federated Learning" color="purple" />
-              <Badge text="Edge Computing" color="rose" />
+              <Badge text="Edge Computing" color="purple" />
             </div>
           </div>
         </section>
